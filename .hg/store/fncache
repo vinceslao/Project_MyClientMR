@@ -1,0 +1,11 @@
+data/readme.md.i
+data/.mbed.i
+data/mbed_app.json.i
+data/shields/TARGET_CORDIO_BLUENRG.lib.i
+data/mbed-os.lib.i
+data/mbed-events.lib.i
+data/.mbedignore.i
+data/source/main.cpp.i
+data/shields/TARGET_ST_BLUENRG.lib.i
+data/module.json.i
+data/source/pretty_printer.h.i

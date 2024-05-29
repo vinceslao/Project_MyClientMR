@@ -1,0 +1,4 @@
+^BUILD$
+^.mbed$
+^mbed-os$
+^shields/TARGET_CORDIO_BLUENRG$
