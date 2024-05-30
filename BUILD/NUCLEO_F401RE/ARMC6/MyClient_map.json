@@ -13,10 +13,10 @@
     {
         "module": "[lib]/fz_wm.l",
         "size": {
-            ".text": 34,
+            ".text": 978,
             ".data": 0,
             ".bss": 0,
-            ".text-delta": -238,
+            ".text-delta": 0,
             ".data-delta": 0,
             ".bss-delta": 0
         }
@@ -101,10 +101,10 @@
     {
         "module": "mbed-os/features",
         "size": {
-            ".text": 81962,
+            ".text": 80398,
             ".data": 208,
             ".bss": 6256,
-            ".text-delta": 1564,
+            ".text-delta": 0,
             ".data-delta": 0,
             ".bss-delta": 0
         }
@@ -167,20 +167,20 @@
     {
         "module": "source/main.o",
         "size": {
-            ".text": 3167,
-            ".data": 0,
-            ".bss": 369,
-            ".text-delta": 118,
+            ".text": 3387,
+            ".data": 3,
+            ".bss": 443,
+            ".text-delta": -148,
             ".data-delta": 0,
             ".bss-delta": 0
         }
     },
     {
         "summary": {
-            "static_ram": 18433,
+            "static_ram": 18510,
             "static_ram_delta": 0,
-            "total_flash": 140865,
-            "total_flash_delta": 1444
+            "total_flash": 140468,
+            "total_flash_delta": -148
         }
     }
 ]

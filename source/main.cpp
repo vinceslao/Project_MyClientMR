@@ -42,6 +42,9 @@ static bool trigger_temp_characteristic = false;
 static bool trigger_humidity_characteristic = false;
 static bool trigger_pressure_characteristic = false;
 
+bool flag_temp = true;
+bool flag_hum = true;
+bool flag_press = true;
 
 void service_discovery(const DiscoveredService *service) {
     if (service->getUUID().shortOrLong() == UUID::UUID_TYPE_SHORT) {
@@ -58,31 +61,43 @@ void service_discovery(const DiscoveredService *service) {
 
 /* Callback quando la caratteristica viene letta */
 void on_characteristic_read(const GattReadCallbackParams *response) {
+    
     if (response->handle == temp_characteristic.getValueHandle()) {
         int16_t temperature;
         memcpy(&temperature, response->data, sizeof(temperature));
         printf("Temperature: %.2f\n", temperature / 100.0);
-    } else if (response->handle == humidity_characteristic.getValueHandle()) {
+        flag_temp = false;
+        flag_hum = true;
+    }else if (response->handle == humidity_characteristic.getValueHandle()) {
         uint16_t humidity;
         memcpy(&humidity, response->data, sizeof(humidity));
         printf("Humidity: %.2f\n", humidity / 100.0);
-    } else if (response->handle == pressure_characteristic.getValueHandle()) {
+        flag_press = true;
+        flag_hum = false;
+    }else if (response->handle == pressure_characteristic.getValueHandle()) {
         uint32_t pressure;
         memcpy(&pressure, response->data, sizeof(pressure));
-        printf("Pressure: %.2f\n", pressure / 10.0);
+        printf("Pressure: %.2f\n\n", pressure / 10.0);
+        flag_temp = true;
     }
 }
 
 /* funzione che legge tutte le caratteristiche */
 void read_all_characteristics() {
+
     if (!BLE::Instance().gattClient().isServiceDiscoveryActive()) {
-        if (trigger_temp_characteristic) {
+        if (trigger_temp_characteristic && (flag_temp == true)) {
+            flag_hum = false;
+            flag_press = false;
             temp_characteristic.read();
         }
-        if (trigger_humidity_characteristic) {
+
+        if (trigger_humidity_characteristic && (flag_hum == true)) {
+            flag_press = false;
             humidity_characteristic.read();
         }
-        if (trigger_pressure_characteristic) {
+        
+        if (trigger_pressure_characteristic && (flag_press == true)) {
             pressure_characteristic.read();
         }
     }
@@ -93,10 +108,14 @@ void characteristic_discovery(const DiscoveredCharacteristic *characteristicP) {
     if (characteristicP->getUUID().getShortUUID() == UUID_TEMPERATURE_CHAR) {
         temp_characteristic = *characteristicP;
         trigger_temp_characteristic = true;
-    } else if (characteristicP->getUUID().getShortUUID() == UUID_HUMIDITY_CHAR) {
+    }
+    
+    if (characteristicP->getUUID().getShortUUID() == UUID_HUMIDITY_CHAR) {
         humidity_characteristic = *characteristicP;
         trigger_humidity_characteristic = true;
-    } else if (characteristicP->getUUID().getShortUUID() == UUID_PRESSURE_CHAR) {
+    }
+    
+    if (characteristicP->getUUID().getShortUUID() == UUID_PRESSURE_CHAR) {
         pressure_characteristic = *characteristicP;
         trigger_pressure_characteristic = true;
     }
@@ -108,53 +127,6 @@ void discovery_termination(Gap::Handle_t connectionHandle) {
         event_queue.call(read_all_characteristics);
     }
 }
-
-
-/*
-void update_temp_characteristic(void) {
-    if (!BLE::Instance().gattClient().isServiceDiscoveryActive()) {
-        temp_characteristic.read();
-        printf("Sta leggendo!!!\n");
-        
-    }
-}
-
-void characteristic_discovery(const DiscoveredCharacteristic *characteristicP) {
-    printf("  C UUID-%x valueAttr[%u] props[%x]\r\n", characteristicP->getUUID().getShortUUID(), characteristicP->getValueHandle(), (uint8_t)characteristicP->getProperties().broadcast());
-    if (characteristicP->getUUID().getShortUUID() == 0x2A6E) {  !ALERT! Alter this filter to suit your device. 
-        temp_characteristic = *characteristicP;
-        trigger_temp_characteristic = true;
-    }
-}
-
-void discovery_termination(Gap::Handle_t connectionHandle) {
-    printf("terminated SD for handle %u\r\n", connectionHandle);
-    if (trigger_temp_characteristic) {
-        trigger_temp_characteristic = false;
-        event_queue.call(update_temp_characteristic);
-    }
-}
-
-
-
-void trigger_toggled_write(const GattReadCallbackParams *response) {
-    if (response->handle == temp_characteristic.getValueHandle()) {
-        printf("trigger_toggled_write: handle %u, offset %u, len %u\r\n", response->handle, response->offset, response->len);
-        for (unsigned index = 0; index < response->len; index++) {
-            printf("%c[%02x]", response->data[index], response->data[index]);
-        }
-        printf("\r\n");
-
-        uint8_t toggledValue = response->data[0] ^ 0x1;
-        temp_characteristic.write(1, &toggledValue);
-    }
-}
-
-void trigger_read(const GattWriteCallbackParams *response) {
-    if (response->handle == temp_characteristic.getValueHandle()) {
-        temp_characteristic.read();
-    }
-}*/
 
 class Client : ble::Gap::EventHandler {
 public:
@@ -184,9 +156,6 @@ private:
         }
 
         print_mac_address();
-
-    //    _ble.gattClient().onDataRead(trigger_toggled_write);
-    //    _ble.gattClient().onDataWritten(trigger_read);
        
         /* Registra la funzione on_characteristic_read come callback per gli eventi di lettura dei dati GATT */
         _ble.gattClient().onDataRead(on_characteristic_read);
@@ -290,15 +259,14 @@ void schedule_ble_events(BLE::OnEventsToProcessCallbackContext *context) {
 
 int main()
 {
-    pc.printf("inizio");
+    pc.printf("Inizio\n");
+
     BLE &ble = BLE::Instance();
     ble.onEventsToProcess(schedule_ble_events);
 
     Client demo(ble, event_queue);
 
     demo.start();
-
-    pc.printf("fine");
 
     return 0;
 }
